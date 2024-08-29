@@ -529,7 +529,7 @@ def validate(
         if hasattr(task, "post_validate"):
             task.post_validate(trainer.get_model(), stats, agg)
 
-        # progress.print(stats, tag=subset, step=trainer.get_num_updates())
+        progress.print(stats, tag=subset, step=trainer.get_num_updates())
 
         valid_losses.append(stats[cfg.checkpoint.best_checkpoint_metric])
     return valid_losses
