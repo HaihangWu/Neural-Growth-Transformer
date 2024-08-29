@@ -28,7 +28,7 @@
 # --gpus-per-task=1  # number of gpus per task
 
 # The maximum running time of the job in days-hours:mins:sec
-#SBATCH --time=01-00:00:0
+#SBATCH --time=00-08:00:0
 
 
 #source /usr/local/module/spartan_new.sh
@@ -54,10 +54,11 @@ export MASTER_ADDR=$master_addr
 echo "MASTER_ADDR="$MASTER_ADDR
 echo "r$SLURM_NODEID Launching python script."
 
-#srun python fixed_model.py  --model Res-4-4-cifar100-1.pt --dataset cifar100 --ini_arch 4 4 4 --finale_arch 4 4 4    | tee  Res-4-4-cifar100-1.txt
-
-#srun python forward_disturbance.py --model Res-lambdaR.8-2-8-cifar100-1.pt --dataset cifar100 --ini_arch 2 2 2 --finale_arch 8 8 8  --copy_random_lambda 0.8 | tee  Res-lambdaR.8-2-8-cifar100-1.txt
-
-#srun python growth-order.py --model Res-p8-ours-cifar100-4.pt --dataset cifar100  --ini_arch 2 2 2 --finale_arch 8 8 8  --growth_interval 8  --GrowthLocation Ours | tee  Res-p8-ours-cifar100-4.txt
-
 #srun python ours.py  --model Res-GT-GL-cifar10-1.pt --dataset cifar10 --ini_arch 2 2 2 --finale_arch 8 8 8  --LRS Constant  | tee  Res-GT-GL-cifar10-1.txt
+
+TEXT=/data/gpfs/projects/punim0512/Haihangw-Projects/Neural-Growth-Transformer/examples/translation/iwslt14.tokenized.de-en
+fairseq-preprocess --source-lang de --target-lang en \
+    --trainpref $TEXT/train --validpref $TEXT/valid --testpref $TEXT/test \
+    --destdir /data/gpfs/projects/punim0512/Haihangw-Projects/Neural-Growth-Transformer/data-bin/iwslt14.tokenized.de-en \
+    --workers 20
+
