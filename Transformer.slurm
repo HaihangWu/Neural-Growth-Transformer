@@ -67,7 +67,7 @@ fairseq-train /data/gpfs/projects/punim0512/Haihangw-Projects/Neural-Growth-Tran
     --eval-bleu-args '{"beam": 5, "max_len_a": 1.2, "max_len_b": 10}' \
     --eval-bleu-detok moses \
     --eval-bleu-remove-bpe \
-    --eval-bleu-print-samples \
+    #--eval-bleu-print-samples \
     --best-checkpoint-metric bleu --maximize-best-checkpoint-metric
 
 fairseq-generate /data/gpfs/projects/punim0512/Haihangw-Projects/Neural-Growth-Transformer/data-bin/iwslt14.tokenized.de-en \
