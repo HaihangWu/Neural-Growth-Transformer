@@ -61,18 +61,18 @@ class TransformerModelBase(FairseqEncoderDecoderModel):
 
         # --  TODO T96535332
         #  bug caused by interaction between OmegaConf II and argparsing
-        cfg.decoder.input_dim = int(cfg.decoder.input_dim)
-        cfg.decoder.output_dim = int(cfg.decoder.output_dim)
+        cfg.decoder.input_dim = int(cfg.decoder.input_dim) #512
+        cfg.decoder.output_dim = int(cfg.decoder.output_dim) #512
         # --
 
-        if cfg.encoder.layers_to_keep:
+        if cfg.encoder.layers_to_keep: #None
             cfg.encoder.layers = len(cfg.encoder.layers_to_keep.split(","))
-        if cfg.decoder.layers_to_keep:
+        if cfg.decoder.layers_to_keep: #None
             cfg.decoder.layers = len(cfg.decoder.layers_to_keep.split(","))
 
         src_dict, tgt_dict = task.source_dictionary, task.target_dictionary
 
-        if cfg.share_all_embeddings:
+        if cfg.share_all_embeddings: # Flse
             if src_dict != tgt_dict:
                 raise ValueError("--share-all-embeddings requires a joined dictionary")
             if cfg.encoder.embed_dim != cfg.decoder.embed_dim:
@@ -90,7 +90,7 @@ class TransformerModelBase(FairseqEncoderDecoderModel):
             )
             decoder_embed_tokens = encoder_embed_tokens
             cfg.share_decoder_input_output_embed = True
-        elif cfg.merge_src_tgt_embed:
+        elif cfg.merge_src_tgt_embed: # False
             logger.info(f"source dict size: {len(src_dict)}")
             logger.info(f"target dict size: {len(tgt_dict)}")
             src_dict.update(tgt_dict)
@@ -109,7 +109,7 @@ class TransformerModelBase(FairseqEncoderDecoderModel):
             decoder_embed_tokens = cls.build_embedding(
                 cfg, tgt_dict, cfg.decoder.embed_dim, cfg.decoder.embed_path
             )
-        if cfg.offload_activations:
+        if cfg.offload_activations: # False
             cfg.checkpoint_activations = True  # offloading implies checkpointing
         encoder = cls.build_encoder(cfg, src_dict, encoder_embed_tokens)
         decoder = cls.build_decoder(cfg, tgt_dict, decoder_embed_tokens)

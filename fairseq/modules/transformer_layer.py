@@ -51,7 +51,7 @@ class TransformerEncoderLayerBase(nn.Module):
         self.activation_dropout_module = FairseqDropout(
             float(activation_dropout_p), module_name=self.__class__.__name__
         )
-        self.normalize_before = cfg.encoder.normalize_before
+        self.normalize_before = cfg.encoder.normalize_before # False
         self.fc1 = self.build_fc1(
             self.embed_dim,
             cfg.encoder.ffn_embed_dim,
@@ -192,7 +192,7 @@ class TransformerEncoderLayerBase(nn.Module):
             )
 
         residual = x
-        if self.normalize_before:
+        if self.normalize_before: # False
             x = self.self_attn_layer_norm(x)
         x, _ = self.self_attn(
             query=x,
@@ -204,11 +204,11 @@ class TransformerEncoderLayerBase(nn.Module):
         )
         x = self.dropout_module(x)
         x = self.residual_connection(x, residual)
-        if not self.normalize_before:
+        if not self.normalize_before: # True
             x = self.self_attn_layer_norm(x)
 
         residual = x
-        if self.normalize_before:
+        if self.normalize_before: # False
             x = self.final_layer_norm(x)
         x = self.activation_fn(self.fc1(x))
         x = self.activation_dropout_module(x)
@@ -411,7 +411,7 @@ class TransformerDecoderLayerBase(nn.Module):
             need_attn = True
 
         residual = x
-        if self.normalize_before:
+        if self.normalize_before: # false
             x = self.self_attn_layer_norm(x)
         if prev_self_attn_state is not None:
             prev_key, prev_value = prev_self_attn_state[:2]
