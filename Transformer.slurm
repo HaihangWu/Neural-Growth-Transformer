@@ -67,10 +67,10 @@ fairseq-train /data/gpfs/projects/punim0512/Haihangw-Projects/Neural-Growth-Tran
     --eval-bleu-args '{"beam": 5, "max_len_a": 1.2, "max_len_b": 10}' \
     --eval-bleu-detok moses \
     --eval-bleu-remove-bpe \
+    --best-checkpoint-metric bleu --maximize-best-checkpoint-metric \
     #--eval-bleu-print-samples \
-    --best-checkpoint-metric bleu --maximize-best-checkpoint-metric
 
-fairseq-generate /data/gpfs/projects/punim0512/Haihangw-Projects/Neural-Growth-Transformer/data-bin/iwslt14.tokenized.de-en \
-    --path /data/gpfs/projects/punim0512/Haihangw-Projects/Neural-Growth-Transformer/checkpoints/checkpoint_best.pt \
-    --batch-size 128 --beam 5 --remove-bpe
+#fairseq-generate /data/gpfs/projects/punim0512/Haihangw-Projects/Neural-Growth-Transformer/data-bin/iwslt14.tokenized.de-en \
+#    --path /data/gpfs/projects/punim0512/Haihangw-Projects/Neural-Growth-Transformer/checkpoints/checkpoint_best.pt \
+#    --batch-size 128 --beam 5 --remove-bpe
 
