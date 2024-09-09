@@ -14,7 +14,7 @@ from fairseq.optim.lr_scheduler import FairseqLRScheduler, register_lr_scheduler
 
 
 @dataclass
-class InverseSquareRootLRScheduleConfig(FairseqDataclass):
+class ConstantScheduleConfig(FairseqDataclass):
     warmup_updates: int = field(
         default=4000,
         metadata={"help": "warmup the learning rate linearly for the first N updates"},
@@ -28,8 +28,8 @@ class InverseSquareRootLRScheduleConfig(FairseqDataclass):
     lr: List[float] = II("optimization.lr")
 
 
-@register_lr_scheduler("inverse_sqrt", dataclass=InverseSquareRootLRScheduleConfig)
-class InverseSquareRootSchedule(FairseqLRScheduler):
+@register_lr_scheduler("constant_schedule", dataclass=ConstantScheduleConfig)
+class ConstantSchedule(FairseqLRScheduler):
     """Decay the LR based on the inverse square root of the update number.
 
     We also support a warmup phase where we linearly increase the learning rate
