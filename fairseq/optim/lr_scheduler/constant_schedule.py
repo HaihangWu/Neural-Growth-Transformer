@@ -69,6 +69,9 @@ class InverseSquareRootSchedule(FairseqLRScheduler):
         self.lr = cfg.warmup_init_lr
         self.optimizer.set_lr(self.lr)
 
+        # learning rate at the end of warmup
+        self.lr_after_warmup=warmup_end_lr
+
     def step(self, epoch, val_loss=None):
         """Update the learning rate at the end of the given epoch."""
         super().step(epoch, val_loss)
@@ -80,6 +83,7 @@ class InverseSquareRootSchedule(FairseqLRScheduler):
         if num_updates < self.cfg.warmup_updates:
             self.lr = self.cfg.warmup_init_lr + num_updates * self.lr_step
         else:
-            self.lr = self.decay_factor * num_updates**-0.5
+            #self.lr = self.decay_factor * num_updates**-0.5
+            self.lr = self.lr_after_warmup
         self.optimizer.set_lr(self.lr)
         return self.lr
