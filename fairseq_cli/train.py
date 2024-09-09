@@ -439,11 +439,12 @@ def validate_and_save(
 
     # Save checkpoint
     if do_save or should_stop:
-        cp_path = checkpoint_utils.save_checkpoint(
-            cfg.checkpoint, trainer, epoch_itr, valid_losses[0]
-        )
-        if cp_path is not None and hasattr(task, "post_save"):
-            task.post_save(cp_path, num_updates)
+        # cp_path = checkpoint_utils.save_checkpoint(
+        #     cfg.checkpoint, trainer, epoch_itr, valid_losses[0]
+        # )
+        # if cp_path is not None and hasattr(task, "post_save"):
+        #     task.post_save(cp_path, num_updates)
+        pass
 
     return valid_losses, should_stop
 
