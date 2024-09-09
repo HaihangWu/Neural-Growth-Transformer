@@ -28,7 +28,7 @@
 # --gpus-per-task=1  # number of gpus per task
 
 # The maximum running time of the job in days-hours:mins:sec
-#SBATCH --time=00-08:00:0
+#SBATCH --time=00-06:00:0
 
 
 #source /usr/local/module/spartan_new.sh
