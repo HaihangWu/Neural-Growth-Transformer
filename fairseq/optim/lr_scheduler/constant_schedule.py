@@ -48,7 +48,7 @@ class ConstantSchedule(FairseqLRScheduler):
       lr = decay_factor / sqrt(update_num)
     """
 
-    def __init__(self, cfg: InverseSquareRootLRScheduleConfig, optimizer):
+    def __init__(self, cfg: ConstantScheduleConfig, optimizer):
         super().__init__(cfg, optimizer)
         if isinstance(cfg.lr, Collection) and len(cfg.lr) > 1:
             raise ValueError(
