@@ -81,6 +81,6 @@ class InverseSquareRootSchedule(FairseqLRScheduler):
             self.lr = self.cfg.warmup_init_lr + num_updates * self.lr_step
         else:
             #self.lr = self.decay_factor * num_updates**-0.5
-            self.lr = 0.001
+            self.lr = 0.0005
         self.optimizer.set_lr(self.lr)
         return self.lr
