@@ -106,11 +106,12 @@ def main(cfg: FairseqConfig) -> None:
             else:
                     model = task.build_model(cfg.model)
 
+            print(model)
             if (os.path.exists(save_path)):
                 pretrained_dict = torch.load(save_path)
                 updated_model=pretrained_dict
                 model.load_state_dict(updated_model)
-            print(model)
+
             criterion = task.build_criterion(cfg.criterion)
             # logger.info("task: {}".format(task.__class__.__name__))
             # logger.info("model: {}".format(model.__class__.__name__))
