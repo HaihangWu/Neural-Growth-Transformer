@@ -105,6 +105,12 @@ def main(cfg: FairseqConfig) -> None:
                     model = fsdp_wrap(task.build_model(cfg.model))
             else:
                     model = task.build_model(cfg.model)
+
+            if (os.path.exists(save_path)):
+                pretrained_dict = torch.load(save_path)
+                updated_model=pretrained_dict
+                model.load_state_dict(updated_model)
+            print(model)
             criterion = task.build_criterion(cfg.criterion)
             # logger.info("task: {}".format(task.__class__.__name__))
             # logger.info("model: {}".format(model.__class__.__name__))
@@ -179,10 +185,6 @@ def main(cfg: FairseqConfig) -> None:
             epoch_itr = trainer.get_train_iterator(
                 epoch=1, load_dataset=True, disable_iterator_cache=task.has_sharded_data("train")
             )
-            if (os.path.exists(save_path)):
-                pretrained_dict = torch.load(save_path)
-                updated_model=pretrained_dict
-                model.load_state_dict(updated_model)
 
             if cfg.common.tpu: # False
                 import torch_xla.core.xla_model as xm
@@ -218,7 +220,7 @@ def main(cfg: FairseqConfig) -> None:
         if should_stop:
             break
 
-        if Next_epoch % 3 == 0 and neural_growth_times<6:
+        if Next_epoch % 1 == 0 and neural_growth_times<6:
             neural_growth = True
             neural_growth_times = (neural_growth_times + 1)
             cfg.lr_scheduler.warmup_updates = 0
