@@ -91,6 +91,7 @@ def main(cfg: FairseqConfig) -> None:
     neural_growth=True
     neural_growth_times=1
     Next_epoch=1
+    max_epoch = cfg.optimization.max_epoch or math.inf
 
     train_meter = meters.StopwatchMeter()
     train_meter.start()
@@ -173,7 +174,6 @@ def main(cfg: FairseqConfig) -> None:
 
                 xm.rendezvous("load_checkpoint")  # wait for all workers
 
-            max_epoch = cfg.optimization.max_epoch or math.inf
             lr = trainer.get_lr()
 
             # TODO: a dry run on validation set to pin the memory
