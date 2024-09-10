@@ -97,7 +97,6 @@ def main(cfg: FairseqConfig) -> None:
     train_meter.start()
     while Next_epoch <= max_epoch: # start training
         # Build model and criterion
-        logger.info(cfg.model)
         cfg.model.encoder_layers= neural_growth_times
         cfg.model.decoder_layers = neural_growth_times
         if neural_growth:

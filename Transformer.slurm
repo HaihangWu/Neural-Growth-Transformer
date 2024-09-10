@@ -57,7 +57,7 @@ echo "r$SLURM_NODEID Launching python script."
 #srun python ours.py  --model Res-GT-GL-cifar10-1.pt --dataset cifar10 --ini_arch 2 2 2 --finale_arch 8 8 8  --LRS Constant  | tee  Res-GT-GL-cifar10-1.txt
 
 fairseq-train /data/gpfs/projects/punim0512/Haihangw-Projects/Neural-Growth-Transformer/data-bin/iwslt14.tokenized.de-en \
-    --arch transformer_iwslt_de_en_3 --share-decoder-input-output-embed \
+    --arch transformer_iwslt_de_en --share-decoder-input-output-embed \
     --optimizer adam --adam-betas '(0.9, 0.98)' --clip-norm 0.0 \
     --lr 5e-4 --lr-scheduler constant_schedule --warmup-updates 4000 \
     --dropout 0.3 --weight-decay 0.0001 \
