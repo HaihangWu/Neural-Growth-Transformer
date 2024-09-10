@@ -92,7 +92,7 @@ def main(cfg: FairseqConfig) -> None:
     neural_growth_times=1
     Next_epoch=1
     max_epoch = cfg.optimization.max_epoch or math.inf
-
+    save_path='/data/gpfs/projects/punim0512/Haihangw-Projects/Neural-Growth-Transformer/checkpoints/checkpoint_last.pt'
     train_meter = meters.StopwatchMeter()
     train_meter.start()
     while Next_epoch <= max_epoch: # start training
@@ -106,9 +106,9 @@ def main(cfg: FairseqConfig) -> None:
             else:
                     model = task.build_model(cfg.model)
             criterion = task.build_criterion(cfg.criterion)
-            logger.info("task: {}".format(task.__class__.__name__))
-            logger.info("model: {}".format(model.__class__.__name__))
-            logger.info("criterion: {}".format(criterion.__class__.__name__))
+            # logger.info("task: {}".format(task.__class__.__name__))
+            # logger.info("model: {}".format(model.__class__.__name__))
+            # logger.info("criterion: {}".format(criterion.__class__.__name__))
             logger.info(
                 "num. shared model params: {:,} (num. trained: {:,})".format(
                     sum(
@@ -122,16 +122,16 @@ def main(cfg: FairseqConfig) -> None:
                 )
             )
 
-            logger.info(
-                "num. expert model params: {} (num. trained: {})".format(
-                    sum(p.numel() for p in model.parameters() if getattr(p, "expert", False)),
-                    sum(
-                        p.numel()
-                        for p in model.parameters()
-                        if getattr(p, "expert", False) and p.requires_grad
-                    ),
-                )
-            )
+            # logger.info(
+            #     "num. expert model params: {} (num. trained: {})".format(
+            #         sum(p.numel() for p in model.parameters() if getattr(p, "expert", False)),
+            #         sum(
+            #             p.numel()
+            #             for p in model.parameters()
+            #             if getattr(p, "expert", False) and p.requires_grad
+            #         ),
+            #     )
+            # )
 
         # Load valid dataset (we load training data below, based on the latest checkpoint)
         # We load the valid dataset AFTER building the model
@@ -158,24 +158,31 @@ def main(cfg: FairseqConfig) -> None:
                 trainer = Trainer(cfg, task, model, criterion, quantizer)
             else:
                 trainer = MegatronTrainer(cfg, task, model, criterion)
-            logger.info(
-                "training on {} devices (GPUs/TPUs)".format(
-                    cfg.distributed_training.distributed_world_size
-                )
-            )
-            logger.info(
-                "max tokens per device = {} and max sentences per device = {}".format(
-                    cfg.dataset.max_tokens,
-                    cfg.dataset.batch_size,
-                )
-            )
+            # logger.info(
+            #     "training on {} devices (GPUs/TPUs)".format(
+            #         cfg.distributed_training.distributed_world_size
+            #     )
+            # )
+            # logger.info(
+            #     "max tokens per device = {} and max sentences per device = {}".format(
+            #         cfg.dataset.max_tokens,
+            #         cfg.dataset.batch_size,
+            #     )
+            # )
 
-            extra_state, epoch_itr = checkpoint_utils.load_checkpoint(  # modify it
-                cfg.checkpoint,
-                trainer,
-                # don't cache epoch iterators for sharded datasets
-                disable_iterator_cache=task.has_sharded_data("train"),
+            # extra_state, epoch_itr = checkpoint_utils.load_checkpoint(  # modify it
+            #     cfg.checkpoint,
+            #     trainer,
+            #     # don't cache epoch iterators for sharded datasets
+            #     disable_iterator_cache=task.has_sharded_data("train"),
+            # )
+            epoch_itr = trainer.get_train_iterator(
+                epoch=1, load_dataset=True, disable_iterator_cache=task.has_sharded_data("train")
             )
+            if (os.path.exists(save_path)):
+                pretrained_dict = torch.load(save_path)
+                updated_model=pretrained_dict
+                model.load_state_dict(updated_model)
 
             if cfg.common.tpu: # False
                 import torch_xla.core.xla_model as xm
@@ -211,6 +218,21 @@ def main(cfg: FairseqConfig) -> None:
         if should_stop:
             break
 
+        if Next_epoch % 3 == 0 and neural_growth_times<6:
+            neural_growth = True
+            neural_growth_times = (neural_growth_times + 1)
+            cfg.lr_scheduler.warmup_updates = 0
+            model_dict = model.state_dict()
+            #model_dict = {k.replace('module.', ''): v.cpu() for k, v in model_dict.items()}
+            dict_model = {
+                'state_dict': model_dict,
+            }
+            dict_model = utils.move_to_cpu(dict_model)
+            torch.save(dict_model, save_path)
+        else:
+            neural_growth = False
+        Next_epoch=Next_epoch+1
+
         # only use first validation loss to update the learning rate
         lr = trainer.lr_step(epoch_itr.epoch, valid_losses[0])
 
@@ -221,13 +243,7 @@ def main(cfg: FairseqConfig) -> None:
             # don't cache epoch iterators for sharded datasets
             disable_iterator_cache=task.has_sharded_data("train"),
         )
-        if Next_epoch % 3 == 0 and neural_growth_times<6:
-            neural_growth_times = (neural_growth_times + 1)
-            cfg.lr_scheduler.warmup_updates = 0
-            neural_growth = True
-        else:
-            neural_growth = False
-        Next_epoch=Next_epoch+1
+
     train_meter.stop()
     logger.info("done training in {:.1f} seconds".format(train_meter.sum))
 
@@ -239,6 +255,7 @@ def main(cfg: FairseqConfig) -> None:
         )
         PathManager.async_close()
         logger.info("ioPath PathManager finished waiting.")
+    os.remove(save_path)
 
 
 def should_stop_early(cfg: DictConfig, valid_loss: float) -> bool:
