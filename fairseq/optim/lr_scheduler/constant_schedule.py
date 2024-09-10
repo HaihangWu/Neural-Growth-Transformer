@@ -60,7 +60,8 @@ class ConstantSchedule(FairseqLRScheduler):
             cfg.warmup_init_lr = 0 if cfg.warmup_updates > 0 else warmup_end_lr
 
         # linearly warmup for the first cfg.warmup_updates
-        self.lr_step = (warmup_end_lr - cfg.warmup_init_lr) / cfg.warmup_updates
+        if cfg.warmup_updates > 0:
+            self.lr_step = (warmup_end_lr - cfg.warmup_init_lr) / cfg.warmup_updates
 
         # then, decay prop. to the inverse square root of the update number
         self.decay_factor = warmup_end_lr * cfg.warmup_updates**0.5

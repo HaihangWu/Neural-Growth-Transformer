@@ -224,6 +224,7 @@ def main(cfg: FairseqConfig) -> None:
         )
         if Next_epoch % 3 == 0 and neural_growth_times<6:
             neural_growth_times = (neural_growth_times + 1)
+            cfg.lr_scheduler.warmup_updates = 0.0
             neural_growth = True
         else:
             neural_growth = False
