@@ -90,12 +90,12 @@ def main(cfg: FairseqConfig) -> None:
 
     neural_growth=True
     neural_growth_times=1
-    Next_epoch=0
+    Next_epoch=1
+
     train_meter = meters.StopwatchMeter()
     train_meter.start()
-    while epoch_itr.next_epoch_idx <= max_epoch: # start training
+    while Next_epoch <= max_epoch: # start training
         # Build model and criterion
-        Next_epoch=Next_epoch+1
         cfg.model.arch = 'transformer_iwslt_de_en_'+str(neural_growth_times)
         if neural_growth:
             if cfg.distributed_training.ddp_backend == "fully_sharded": #false
@@ -168,15 +168,6 @@ def main(cfg: FairseqConfig) -> None:
                     cfg.dataset.batch_size,
                 )
             )
-
-            # Load the latest checkpoint if one is available and restore the
-            # corresponding train iterator
-            extra_state, epoch_itr = checkpoint_utils.load_checkpoint(         # modify it
-                cfg.checkpoint,
-                trainer,
-                # don't cache epoch iterators for sharded datasets
-                disable_iterator_cache=task.has_sharded_data("train"),
-            )
             if cfg.common.tpu: # False
                 import torch_xla.core.xla_model as xm
 
@@ -222,11 +213,12 @@ def main(cfg: FairseqConfig) -> None:
             # don't cache epoch iterators for sharded datasets
             disable_iterator_cache=task.has_sharded_data("train"),
         )
-        if Next_epoch % 3 == 0:
-            neural_growth_times = (neural_growth_times + 1) if neural_growth < 6 else 6
+        if Next_epoch % 3 == 0 and neural_growth_times<6:
+            neural_growth_times = (neural_growth_times + 1)
             neural_growth = True
         else:
             neural_growth = False
+        Next_epoch=Next_epoch+1
     train_meter.stop()
     logger.info("done training in {:.1f} seconds".format(train_meter.sum))
 
