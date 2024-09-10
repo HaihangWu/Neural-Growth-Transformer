@@ -111,7 +111,7 @@ def main(cfg: FairseqConfig) -> None:
                 pretrained_dict = torch.load(save_path)
                 updated_model=pretrained_dict
                 print("##################NEW MODEL ARCHITECTURE############")
-                print(updated_model)
+                print(updated_model.keys())
                 model.load_state_dict(updated_model)
 
             criterion = task.build_criterion(cfg.criterion)
