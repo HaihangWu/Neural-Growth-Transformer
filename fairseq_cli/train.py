@@ -109,7 +109,7 @@ def main(cfg: FairseqConfig) -> None:
             print(model)
             if (os.path.exists(save_path)):
                 pretrained_dict = torch.load(save_path)
-                updated_model=pretrained_dict
+                updated_model=pretrained_dict['state_dict']
                 print("##################NEW MODEL ARCHITECTURE############")
                 print(updated_model.keys())
                 model.load_state_dict(updated_model)
