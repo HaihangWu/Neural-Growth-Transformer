@@ -71,7 +71,7 @@ def main(cfg: FairseqConfig) -> None:
         checkpoint_utils.verify_checkpoint_directory(cfg.checkpoint.save_dir)
 
     # Print args
-    logger.info(cfg)
+    #logger.info(cfg)
 
     if cfg.checkpoint.write_checkpoints_asynchronously: # false
         try:
@@ -97,7 +97,9 @@ def main(cfg: FairseqConfig) -> None:
     train_meter.start()
     while Next_epoch <= max_epoch: # start training
         # Build model and criterion
-        cfg.model.arch = 'transformer_iwslt_de_en_'+str(neural_growth_times)
+        logger.info(cfg.model)
+        cfg.model.encoder_layers= neural_growth_times
+        cfg.model.decoder_layers = neural_growth_times
         if neural_growth:
             if cfg.distributed_training.ddp_backend == "fully_sharded": #false
                 with fsdp_enable_wrap(cfg.distributed_training):
