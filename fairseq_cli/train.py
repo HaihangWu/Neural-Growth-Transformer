@@ -108,15 +108,15 @@ def main(cfg: FairseqConfig) -> None:
             else:
                     model = task.build_model(cfg.model)
 
-            print(model)
+            #print(model)
             if (os.path.exists(save_path)):
                 new_layer='layers.' + str(neural_growth_times - 1)
                 preceding_layer='layers.' + str(neural_growth_times - 2)
                 pretrained_dict = torch.load(save_path)
                 model_dict = model.state_dict()
                 updated_model = {**pretrained_dict['state_dict'], **{k: pretrained_dict['state_dict'][k.replace(new_layer, preceding_layer)]  for k, v in model_dict.items() if new_layer in k}}
-                print("##################NEW MODEL ARCHITECTURE############")
-                print(updated_model.keys())
+                #print("##################NEW MODEL ARCHITECTURE############")
+                #print(updated_model.keys())
                 model.load_state_dict(updated_model)
 
             criterion = task.build_criterion(cfg.criterion)
@@ -191,7 +191,7 @@ def main(cfg: FairseqConfig) -> None:
             #     disable_iterator_cache=task.has_sharded_data("train"),
             # )
             epoch_itr = trainer.get_train_iterator(
-                epoch=1, load_dataset=True, disable_iterator_cache=task.has_sharded_data("train")
+                epoch=Next_epoch, load_dataset=True, disable_iterator_cache=task.has_sharded_data("train")
             )
 
             if cfg.common.tpu: # False
@@ -228,7 +228,7 @@ def main(cfg: FairseqConfig) -> None:
         if should_stop:
             break
 
-        if Next_epoch % 1 == 0 and neural_growth_times<6:
+        if Next_epoch % 3 == 0 and neural_growth_times<6:
             neural_growth = True
             neural_growth_times = (neural_growth_times + 1)
             cfg.lr_scheduler.warmup_updates = 0
