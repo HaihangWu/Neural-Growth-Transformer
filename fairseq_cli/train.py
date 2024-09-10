@@ -169,6 +169,14 @@ def main(cfg: FairseqConfig) -> None:
                     cfg.dataset.batch_size,
                 )
             )
+
+            extra_state, epoch_itr = checkpoint_utils.load_checkpoint(  # modify it
+                cfg.checkpoint,
+                trainer,
+                # don't cache epoch iterators for sharded datasets
+                disable_iterator_cache=task.has_sharded_data("train"),
+            )
+
             if cfg.common.tpu: # False
                 import torch_xla.core.xla_model as xm
 
