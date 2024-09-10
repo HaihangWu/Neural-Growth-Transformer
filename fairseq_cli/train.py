@@ -93,6 +93,7 @@ def main(cfg: FairseqConfig) -> None:
     Next_epoch=1
     max_epoch = cfg.optimization.max_epoch or math.inf
     save_path='/data/gpfs/projects/punim0512/Haihangw-Projects/Neural-Growth-Transformer/checkpoints/checkpoint_last.pt'
+    os.remove(save_path)
     train_meter = meters.StopwatchMeter()
     train_meter.start()
     while Next_epoch <= max_epoch: # start training
@@ -108,8 +109,11 @@ def main(cfg: FairseqConfig) -> None:
 
             print(model)
             if (os.path.exists(save_path)):
+                new_layer='layers.' + str(neural_growth_times - 1)
+                preceding_layer='layers.' + str(neural_growth_times - 2)
                 pretrained_dict = torch.load(save_path)
-                updated_model=pretrained_dict['state_dict']
+                model_dict = model.state_dict()
+                updated_model = {**pretrained_dict['state_dict'], **{k: pretrained_dict['state_dict'][k.replace(new_layer, preceding_layer)]  for k, v in model_dict.items() if new_layer in k}}
                 print("##################NEW MODEL ARCHITECTURE############")
                 print(updated_model.keys())
                 model.load_state_dict(updated_model)
