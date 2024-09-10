@@ -28,6 +28,12 @@ from fairseq.models import (
 from fairseq.models.fairseq_encoder import EncoderOut
 from fairseq.models.transformer import (
     base_architecture,
+    transformer_iwslt_de_en_1,
+    transformer_iwslt_de_en_2,
+    transformer_iwslt_de_en_3,
+    transformer_iwslt_de_en_4,
+    transformer_iwslt_de_en_5,
+    transformer_iwslt_de_en_6,
     transformer_iwslt_de_en,
     transformer_wmt_en_de_big,
 )
@@ -764,6 +770,42 @@ class TransformerDecoder(FairseqDecoder):
 
         return state_dict
 
+@register_model_architecture(
+    "pipeline_parallel_transformer", "transformer_iwslt_de_en_1_pipeline_parallel"
+)
+def transformer_iwslt_de_en_1_dist(args):
+    transformer_iwslt_de_en_1(args)
+
+@register_model_architecture(
+    "pipeline_parallel_transformer", "transformer_iwslt_de_en_2_pipeline_parallel"
+)
+def transformer_iwslt_de_en_2_dist(args):
+    transformer_iwslt_de_en_2(args)
+
+@register_model_architecture(
+    "pipeline_parallel_transformer", "transformer_iwslt_de_en_3_pipeline_parallel"
+)
+def transformer_iwslt_de_en_3_dist(args):
+    transformer_iwslt_de_en_3(args)
+
+@register_model_architecture(
+    "pipeline_parallel_transformer", "transformer_iwslt_de_en_4_pipeline_parallel"
+)
+def transformer_iwslt_de_en_4_dist(args):
+    transformer_iwslt_de_en_4(args)
+
+@register_model_architecture(
+    "pipeline_parallel_transformer", "transformer_iwslt_de_en_5_pipeline_parallel"
+)
+def transformer_iwslt_de_en_5_dist(args):
+    transformer_iwslt_de_en_5(args)
+
+
+@register_model_architecture(
+    "pipeline_parallel_transformer", "transformer_iwslt_de_en_6_pipeline_parallel"
+)
+def transformer_iwslt_de_en_6_dist(args):
+    transformer_iwslt_de_en_6(args)
 
 @register_model_architecture(
     "pipeline_parallel_transformer", "transformer_iwslt_de_en_pipeline_parallel"
