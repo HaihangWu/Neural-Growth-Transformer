@@ -73,7 +73,7 @@ def main(cfg: FairseqConfig) -> None:
     # Print args
     logger.info(cfg)
 
-    if cfg.checkpoint.write_checkpoints_asynchronously:
+    if cfg.checkpoint.write_checkpoints_asynchronously: # false
         try:
             import iopath  # noqa: F401
         except ImportError:
@@ -88,111 +88,117 @@ def main(cfg: FairseqConfig) -> None:
 
     assert cfg.criterion, "Please specify criterion to train a model"
 
-    # Build model and criterion
-    if cfg.distributed_training.ddp_backend == "fully_sharded": #false
-        with fsdp_enable_wrap(cfg.distributed_training):
-            model = fsdp_wrap(task.build_model(cfg.model))
-    else:
-        model = task.build_model(cfg.model)
-    criterion = task.build_criterion(cfg.criterion)
-    logger.info(model)
-    logger.info("task: {}".format(task.__class__.__name__))
-    logger.info("model: {}".format(model.__class__.__name__))
-    logger.info("criterion: {}".format(criterion.__class__.__name__))
-    logger.info(
-        "num. shared model params: {:,} (num. trained: {:,})".format(
-            sum(
-                p.numel() for p in model.parameters() if not getattr(p, "expert", False)
-            ),
-            sum(
-                p.numel()
-                for p in model.parameters()
-                if not getattr(p, "expert", False) and p.requires_grad
-            ),
-        )
-    )
-
-    logger.info(
-        "num. expert model params: {} (num. trained: {})".format(
-            sum(p.numel() for p in model.parameters() if getattr(p, "expert", False)),
-            sum(
-                p.numel()
-                for p in model.parameters()
-                if getattr(p, "expert", False) and p.requires_grad
-            ),
-        )
-    )
-
-    # Load valid dataset (we load training data below, based on the latest checkpoint)
-    # We load the valid dataset AFTER building the model
-    if not cfg.dataset.disable_validation: # True
-        data_utils.raise_if_valid_subsets_unintentionally_ignored(cfg)
-        if cfg.dataset.combine_valid_subsets:
-            task.load_dataset("valid", combine=True, epoch=1)
-        else:
-            for valid_sub_split in cfg.dataset.valid_subset.split(","):
-                task.load_dataset(valid_sub_split, combine=False, epoch=1)
-
-    # (optionally) Configure quantization
-    if cfg.common.quantization_config_path is not None: # False
-        quantizer = quantization_utils.Quantizer(
-            config_path=cfg.common.quantization_config_path,
-            max_epoch=cfg.optimization.max_epoch,
-            max_update=cfg.optimization.max_update,
-        )
-    else:
-        quantizer = None
-
-    # Build trainer
-    if cfg.common.model_parallel_size == 1:
-        trainer = Trainer(cfg, task, model, criterion, quantizer)
-    else:
-        trainer = MegatronTrainer(cfg, task, model, criterion)
-    logger.info(
-        "training on {} devices (GPUs/TPUs)".format(
-            cfg.distributed_training.distributed_world_size
-        )
-    )
-    logger.info(
-        "max tokens per device = {} and max sentences per device = {}".format(
-            cfg.dataset.max_tokens,
-            cfg.dataset.batch_size,
-        )
-    )
-
-    # Load the latest checkpoint if one is available and restore the
-    # corresponding train iterator
-    extra_state, epoch_itr = checkpoint_utils.load_checkpoint(         # modify it
-        cfg.checkpoint,
-        trainer,
-        # don't cache epoch iterators for sharded datasets
-        disable_iterator_cache=task.has_sharded_data("train"),
-    )
-    if cfg.common.tpu: # False
-        import torch_xla.core.xla_model as xm
-
-        xm.rendezvous("load_checkpoint")  # wait for all workers
-
-    max_epoch = cfg.optimization.max_epoch or math.inf
-    lr = trainer.get_lr()
-
-    # TODO: a dry run on validation set to pin the memory
-    valid_subsets = cfg.dataset.valid_subset.split(",")
-    if not cfg.dataset.disable_validation:
-        for subset in valid_subsets:
-            logger.info('begin dry-run validation on "{}" subset'.format(subset))
-            itr = trainer.get_valid_iterator(subset).next_epoch_itr(
-                shuffle=False, set_dataset_epoch=False  # use a fixed valid set
-            )
-            if cfg.common.tpu:
-                itr = utils.tpu_data_loader(itr)
-            for _ in itr:
-                pass
-    # TODO: end of dry run section
-
+    neural_growth=True
+    neural_growth_times=1
+    Next_epoch=0
     train_meter = meters.StopwatchMeter()
     train_meter.start()
     while epoch_itr.next_epoch_idx <= max_epoch: # start training
+        # Build model and criterion
+        Next_epoch=Next_epoch+1
+        cfg.model.arch = 'transformer_iwslt_de_en_'+str(neural_growth_times)
+        if neural_growth:
+            if cfg.distributed_training.ddp_backend == "fully_sharded": #false
+                with fsdp_enable_wrap(cfg.distributed_training):
+                    model = fsdp_wrap(task.build_model(cfg.model))
+            else:
+                    model = task.build_model(cfg.model)
+            criterion = task.build_criterion(cfg.criterion)
+            logger.info(model)
+            logger.info("task: {}".format(task.__class__.__name__))
+            logger.info("model: {}".format(model.__class__.__name__))
+            logger.info("criterion: {}".format(criterion.__class__.__name__))
+            logger.info(
+                "num. shared model params: {:,} (num. trained: {:,})".format(
+                    sum(
+                        p.numel() for p in model.parameters() if not getattr(p, "expert", False)
+                    ),
+                    sum(
+                        p.numel()
+                        for p in model.parameters()
+                        if not getattr(p, "expert", False) and p.requires_grad
+                    ),
+                )
+            )
+
+            logger.info(
+                "num. expert model params: {} (num. trained: {})".format(
+                    sum(p.numel() for p in model.parameters() if getattr(p, "expert", False)),
+                    sum(
+                        p.numel()
+                        for p in model.parameters()
+                        if getattr(p, "expert", False) and p.requires_grad
+                    ),
+                )
+            )
+
+        # Load valid dataset (we load training data below, based on the latest checkpoint)
+        # We load the valid dataset AFTER building the model
+            if not cfg.dataset.disable_validation: # True
+                data_utils.raise_if_valid_subsets_unintentionally_ignored(cfg)
+                if cfg.dataset.combine_valid_subsets:
+                    task.load_dataset("valid", combine=True, epoch=1)
+                else:
+                    for valid_sub_split in cfg.dataset.valid_subset.split(","):
+                        task.load_dataset(valid_sub_split, combine=False, epoch=1)
+
+            # (optionally) Configure quantization
+            if cfg.common.quantization_config_path is not None: # False
+                quantizer = quantization_utils.Quantizer(
+                    config_path=cfg.common.quantization_config_path,
+                    max_epoch=cfg.optimization.max_epoch,
+                    max_update=cfg.optimization.max_update,
+                )
+            else:
+                quantizer = None
+
+            # Build trainer
+            if cfg.common.model_parallel_size == 1:
+                trainer = Trainer(cfg, task, model, criterion, quantizer)
+            else:
+                trainer = MegatronTrainer(cfg, task, model, criterion)
+            logger.info(
+                "training on {} devices (GPUs/TPUs)".format(
+                    cfg.distributed_training.distributed_world_size
+                )
+            )
+            logger.info(
+                "max tokens per device = {} and max sentences per device = {}".format(
+                    cfg.dataset.max_tokens,
+                    cfg.dataset.batch_size,
+                )
+            )
+
+            # Load the latest checkpoint if one is available and restore the
+            # corresponding train iterator
+            extra_state, epoch_itr = checkpoint_utils.load_checkpoint(         # modify it
+                cfg.checkpoint,
+                trainer,
+                # don't cache epoch iterators for sharded datasets
+                disable_iterator_cache=task.has_sharded_data("train"),
+            )
+            if cfg.common.tpu: # False
+                import torch_xla.core.xla_model as xm
+
+                xm.rendezvous("load_checkpoint")  # wait for all workers
+
+            max_epoch = cfg.optimization.max_epoch or math.inf
+            lr = trainer.get_lr()
+
+            # TODO: a dry run on validation set to pin the memory
+            valid_subsets = cfg.dataset.valid_subset.split(",")
+            if not cfg.dataset.disable_validation: # True
+                for subset in valid_subsets:
+                    logger.info('begin dry-run validation on "{}" subset'.format(subset))
+                    itr = trainer.get_valid_iterator(subset).next_epoch_itr(
+                        shuffle=False, set_dataset_epoch=False  # use a fixed valid set
+                    )
+                    if cfg.common.tpu:
+                        itr = utils.tpu_data_loader(itr)
+                    for _ in itr:
+                        pass
+            # TODO: end of dry run section
+    # while epoch_itr.next_epoch_idx <= max_epoch: # start training
         if lr <= cfg.optimization.stop_min_lr: # false
             logger.info(
                 f"stopping training because current learning rate ({lr}) is smaller "
@@ -216,6 +222,11 @@ def main(cfg: FairseqConfig) -> None:
             # don't cache epoch iterators for sharded datasets
             disable_iterator_cache=task.has_sharded_data("train"),
         )
+        if Next_epoch % 3 == 0:
+            neural_growth_times = (neural_growth_times + 1) if neural_growth < 6 else 6
+            neural_growth = True
+        else:
+            neural_growth = False
     train_meter.stop()
     logger.info("done training in {:.1f} seconds".format(train_meter.sum))
 
