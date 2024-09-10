@@ -93,7 +93,8 @@ def main(cfg: FairseqConfig) -> None:
     Next_epoch=1
     max_epoch = cfg.optimization.max_epoch or math.inf
     save_path='/data/gpfs/projects/punim0512/Haihangw-Projects/Neural-Growth-Transformer/checkpoints/checkpoint_last.pt'
-    os.remove(save_path)
+    if (os.path.exists(save_path)):
+        os.remove(save_path)
     train_meter = meters.StopwatchMeter()
     train_meter.start()
     while Next_epoch <= max_epoch: # start training
