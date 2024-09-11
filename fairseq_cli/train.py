@@ -235,7 +235,7 @@ def main(cfg: FairseqConfig) -> None:
         print(training_accuracy_queue[1], training_accuracy_queue[0])
         if Next_epoch>=4 and (((training_accuracy_queue[0] - training_accuracy_queue[1])< grow_thresh) or (20-Next_epoch)<(5-neural_growth_times) ) and neural_growth_times<4:
             neural_growth = True
-            training_accuracy_queue = deque([-10, -10], maxlen=2)
+            training_accuracy_queue = deque([10000, 10000], maxlen=2)
             neural_growth_times = (neural_growth_times + 1)
             cfg.lr_scheduler.warmup_updates = 0
             model_dict = model.state_dict()
