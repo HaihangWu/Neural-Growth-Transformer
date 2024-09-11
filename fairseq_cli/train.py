@@ -233,12 +233,11 @@ def main(cfg: FairseqConfig) -> None:
             neural_growth_times = (neural_growth_times + 1)
             cfg.lr_scheduler.warmup_updates = 0
             model_dict = model.state_dict()
-            #model_dict = {k.replace('module.', ''): v.cpu() for k, v in model_dict.items()}
             dict_model = {
                 'state_dict': model_dict,
             }
             dict_model = utils.move_to_cpu(dict_model)
-            #torch.save(dict_model, save_path)
+            torch.save(dict_model, save_path)
         else:
             neural_growth = False
         Next_epoch=Next_epoch+1
@@ -265,6 +264,17 @@ def main(cfg: FairseqConfig) -> None:
         )
         PathManager.async_close()
         logger.info("ioPath PathManager finished waiting.")
+
+    # model_dict = model.state_dict()
+    # dict_model = {
+    #     'state_dict': model_dict,
+    # }
+    # dict_model = utils.move_to_cpu(dict_model)
+    # torch.save(dict_model, save_path)
+
+    #valid_subsets = cfg.dataset.valid_subset.split(",")
+    gen_subsets = cfg.dataset.gen_subset.split(",")
+    gen_losses = validate(cfg, trainer, task, epoch_itr, gen_subsets)
 
 
 

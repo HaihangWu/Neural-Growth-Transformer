@@ -394,9 +394,7 @@ def _main(cfg: DictConfig, output_file):
             ),
             file=output_file,
         )
-    save_path='/data/gpfs/projects/punim0512/Haihangw-Projects/Neural-Growth-Transformer/checkpoints/checkpoint_last.pt'
-    if (os.path.exists(save_path)):
-        os.remove(save_path)
+
     return scorer
 
 
