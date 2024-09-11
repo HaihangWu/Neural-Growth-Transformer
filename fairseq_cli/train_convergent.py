@@ -39,6 +39,7 @@ from fairseq.file_io import PathManager
 from fairseq.logging import meters, metrics, progress_bar
 from fairseq.model_parallel.megatron_trainer import MegatronTrainer
 from fairseq.trainer import Trainer
+from collections import deque
 
 
 def main(cfg: FairseqConfig) -> None:
@@ -95,6 +96,8 @@ def main(cfg: FairseqConfig) -> None:
     save_path='/data/gpfs/projects/punim0512/Haihangw-Projects/Neural-Growth-Transformer/checkpoints/checkpoint_last.pt'
     if (os.path.exists(save_path)):
         os.remove(save_path)
+    training_accuracy_queue = deque([-1, -1], maxlen=2)
+    grow_thresh=0.5
     train_meter = meters.StopwatchMeter()
     train_meter.start()
     while Next_epoch <= max_epoch: # start training
@@ -224,12 +227,15 @@ def main(cfg: FairseqConfig) -> None:
             break
 
         # train for one epoch
-        valid_losses, should_stop = train(cfg, trainer, task, epoch_itr)
+        valid_losses, should_stop, train_stats, val_stats = train(cfg, trainer, task, epoch_itr)
         if should_stop:
             break
 
-        if max(Next_epoch-4,-1) % 5 == 0 and neural_growth_times<6:
+        training_accuracy_queue.append(float(train_stats["ppl"]))
+        print(training_accuracy_queue[1], training_accuracy_queue[0])
+        if Next_epoch>=4 and (((training_accuracy_queue[0] - training_accuracy_queue[1])< grow_thresh) or (20-Next_epoch)<(7-neural_growth_times) ) and neural_growth_times<6:
             neural_growth = True
+            training_accuracy_queue = deque([10000, 10000], maxlen=2)
             neural_growth_times = (neural_growth_times + 1)
             cfg.lr_scheduler.warmup_updates = 0
             model_dict = model.state_dict()
@@ -393,7 +399,7 @@ def train(
                 metrics.reset_meters("train_inner")
 
         end_of_epoch = not itr.has_next()
-        valid_losses, should_stop = validate_and_save(
+        valid_losses, should_stop, val_stats = validate_and_save(
             cfg, trainer, task, epoch_itr, valid_subsets, end_of_epoch
         )
 
@@ -402,12 +408,12 @@ def train(
 
     # log end-of-epoch stats
     logger.info("end of epoch {} (average epoch stats below)".format(epoch_itr.epoch))
-    stats = get_training_stats(metrics.get_smoothed_values("train"))
-    progress.print(stats, tag="train", step=num_updates)
+    train_stats = get_training_stats(metrics.get_smoothed_values("train"))
+    progress.print(train_stats, tag="train", step=num_updates)
 
     # reset epoch-level meters
     metrics.reset_meters("train")
-    return valid_losses, should_stop
+    return valid_losses, should_stop, train_stats, val_stats
 
 
 def _flatten_config(cfg: DictConfig):
@@ -483,8 +489,9 @@ def validate_and_save(
 
     # Validate
     valid_losses = [None]
+    val_stats = None
     if do_validate:
-        valid_losses = validate(cfg, trainer, task, epoch_itr, valid_subsets)
+        valid_losses, val_stats = validate(cfg, trainer, task, epoch_itr, valid_subsets)
 
     should_stop |= should_stop_early(cfg, valid_losses[0])
 
@@ -497,7 +504,7 @@ def validate_and_save(
         #     task.post_save(cp_path, num_updates)
         pass
 
-    return valid_losses, should_stop
+    return valid_losses, should_stop, val_stats
 
 
 def get_training_stats(stats: Dict[str, Any]) -> Dict[str, Any]:
@@ -584,7 +591,7 @@ def validate(
         progress.print(stats, tag=subset, step=trainer.get_num_updates())
 
         valid_losses.append(stats[cfg.checkpoint.best_checkpoint_metric])
-    return valid_losses
+    return valid_losses,stats
 
 
 def get_valid_stats(
