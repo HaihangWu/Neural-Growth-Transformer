@@ -265,6 +265,8 @@ def main(cfg: FairseqConfig) -> None:
         )
         PathManager.async_close()
         logger.info("ioPath PathManager finished waiting.")
+
+
     os.remove(save_path)
 
 

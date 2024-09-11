@@ -587,7 +587,7 @@ class DatasetConfig(FairseqDataclass):
 @dataclass
 class OptimizationConfig(FairseqDataclass):
     max_epoch: int = field(
-        default=20, metadata={"help": "force stop training at specified epoch"}
+        default=2, metadata={"help": "force stop training at specified epoch"}
     )
     max_update: int = field(
         default=0, metadata={"help": "force stop training at specified update"}
