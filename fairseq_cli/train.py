@@ -232,7 +232,7 @@ def main(cfg: FairseqConfig) -> None:
             break
 
         training_accuracy_queue.append(float(train_stats["ppl"]))
-        if (((training_accuracy_queue[1] - training_accuracy_queue[0])< grow_thresh) or (20-Next_epoch)<(5-neural_growth_times) ) and neural_growth_times<4:
+        if Next_epoch>=4 and (((training_accuracy_queue[1] - training_accuracy_queue[0])< grow_thresh) or (20-Next_epoch)<(5-neural_growth_times) ) and neural_growth_times<4:
             neural_growth = True
             training_accuracy_queue = deque([-10, -10], maxlen=2)
             neural_growth_times = (neural_growth_times + 1)
