@@ -231,7 +231,7 @@ def main(cfg: FairseqConfig) -> None:
         if should_stop:
             break
 
-        training_accuracy_queue.append(train_stats["ppl"])
+        training_accuracy_queue.append(float(train_stats["ppl"]))
         if ((training_accuracy_queue[1] - training_accuracy_queue[0])< grow_thresh) and neural_growth_times<6:
             neural_growth = True
             training_accuracy_queue = deque([-10, -10], maxlen=2)
