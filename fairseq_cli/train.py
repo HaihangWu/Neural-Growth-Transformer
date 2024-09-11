@@ -488,6 +488,7 @@ def validate_and_save(
 
     # Validate
     valid_losses = [None]
+    val_stats = None
     if do_validate:
         valid_losses, val_stats = validate(cfg, trainer, task, epoch_itr, valid_subsets)
 
