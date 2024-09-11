@@ -252,11 +252,11 @@ def _main(cfg: DictConfig, output_file):
             if has_target:
                 target_str = decode_fn(target_str)
 
-            if not cfg.common_eval.quiet:
-                if src_dict is not None:
-                    print("S-{}\t{}".format(sample_id, src_str), file=output_file)
-                if has_target:
-                    print("T-{}\t{}".format(sample_id, target_str), file=output_file)
+            # if not cfg.common_eval.quiet:
+            #     if src_dict is not None:
+            #         print("S-{}\t{}".format(sample_id, src_str), file=output_file)
+            #     if has_target:
+            #         print("T-{}\t{}".format(sample_id, target_str), file=output_file)
 
             # Process top predictions
             for j, hypo in enumerate(hypos[i][: cfg.generation.nbest]):
@@ -273,60 +273,60 @@ def _main(cfg: DictConfig, output_file):
                 if not cfg.common_eval.quiet:
                     score = hypo["score"] / math.log(2)  # convert to base 2
                     # original hypothesis (after tokenization and BPE)
-                    print(
-                        "H-{}\t{}\t{}".format(sample_id, score, hypo_str),
-                        file=output_file,
-                    )
-                    # detokenized hypothesis
-                    print(
-                        "D-{}\t{}\t{}".format(sample_id, score, detok_hypo_str),
-                        file=output_file,
-                    )
-                    print(
-                        "P-{}\t{}".format(
-                            sample_id,
-                            " ".join(
-                                map(
-                                    lambda x: "{:.4f}".format(x),
-                                    # convert from base e to base 2
-                                    hypo["positional_scores"]
-                                    .div_(math.log(2))
-                                    .tolist(),
-                                )
-                            ),
-                        ),
-                        file=output_file,
-                    )
-
-                    if cfg.generation.print_alignment == "hard":
-                        print(
-                            "A-{}\t{}".format(
-                                sample_id,
-                                " ".join(
-                                    [
-                                        "{}-{}".format(src_idx, tgt_idx)
-                                        for src_idx, tgt_idx in alignment
-                                    ]
-                                ),
-                            ),
-                            file=output_file,
-                        )
-                    if cfg.generation.print_alignment == "soft":
-                        print(
-                            "A-{}\t{}".format(
-                                sample_id,
-                                " ".join(
-                                    [",".join(src_probs) for src_probs in alignment]
-                                ),
-                            ),
-                            file=output_file,
-                        )
-
-                    if cfg.generation.print_step:
-                        print(
-                            "I-{}\t{}".format(sample_id, hypo["steps"]),
-                            file=output_file,
-                        )
+                    # print(
+                    #     "H-{}\t{}\t{}".format(sample_id, score, hypo_str),
+                    #     file=output_file,
+                    # )
+                    # # detokenized hypothesis
+                    # print(
+                    #     "D-{}\t{}\t{}".format(sample_id, score, detok_hypo_str),
+                    #     file=output_file,
+                    # )
+                    # print(
+                    #     "P-{}\t{}".format(
+                    #         sample_id,
+                    #         " ".join(
+                    #             map(
+                    #                 lambda x: "{:.4f}".format(x),
+                    #                 # convert from base e to base 2
+                    #                 hypo["positional_scores"]
+                    #                 .div_(math.log(2))
+                    #                 .tolist(),
+                    #             )
+                    #         ),
+                    #     ),
+                    #     file=output_file,
+                    # )
+                    #
+                    # if cfg.generation.print_alignment == "hard":
+                    #     print(
+                    #         "A-{}\t{}".format(
+                    #             sample_id,
+                    #             " ".join(
+                    #                 [
+                    #                     "{}-{}".format(src_idx, tgt_idx)
+                    #                     for src_idx, tgt_idx in alignment
+                    #                 ]
+                    #             ),
+                    #         ),
+                    #         file=output_file,
+                    #     )
+                    # if cfg.generation.print_alignment == "soft":
+                    #     print(
+                    #         "A-{}\t{}".format(
+                    #             sample_id,
+                    #             " ".join(
+                    #                 [",".join(src_probs) for src_probs in alignment]
+                    #             ),
+                    #         ),
+                    #         file=output_file,
+                    #     )
+                    #
+                    # if cfg.generation.print_step:
+                    #     print(
+                    #         "I-{}\t{}".format(sample_id, hypo["steps"]),
+                    #         file=output_file,
+                    #     )
 
                     if cfg.generation.retain_iter_history:
                         for step, h in enumerate(hypo["history"]):
@@ -338,10 +338,10 @@ def _main(cfg: DictConfig, output_file):
                                 tgt_dict=tgt_dict,
                                 remove_bpe=None,
                             )
-                            print(
-                                "E-{}_{}\t{}".format(sample_id, step, h_str),
-                                file=output_file,
-                            )
+                            # print(
+                            #     "E-{}_{}\t{}".format(sample_id, step, h_str),
+                            #     file=output_file,
+                            # )
 
                 # Score only the top hypothesis
                 if has_target and j == 0:
@@ -394,6 +394,17 @@ def _main(cfg: DictConfig, output_file):
             ),
             file=output_file,
         )
+
+    folder_path = '/data/gpfs/projects/punim0512/Haihangw-Projects/Neural-Growth-Transformer/checkpoints'
+    if any(os.scandir(folder_path)):
+        # Clean up the folder by deleting all its contents
+        for filename in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+            except Exception as e:
+                print(f'Failed to delete {file_path}. Reason: {e}')
 
     return scorer
 

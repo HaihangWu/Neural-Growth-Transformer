@@ -268,7 +268,7 @@ def main(cfg: FairseqConfig) -> None:
     num_updates=trainer.get_num_updates()
     valid_losses = [None]
     cp_path = checkpoint_utils.save_checkpoint(
-        cfg.checkpoint, trainer, epoch_itr, valid_losses[0]
+        cfg.checkpoint, trainer, epoch_itr, valid_losses[0],save_last_only=True
     )
     if cp_path is not None and hasattr(task, "post_save"):
         task.post_save(cp_path, num_updates)
