@@ -88,6 +88,12 @@ def main(cfg: FairseqConfig) -> None:
 
     assert cfg.criterion, "Please specify criterion to train a model"
 
+
+    save_path='/data/gpfs/projects/punim0512/Haihangw-Projects/Neural-Growth-Transformer/checkpoints/checkpoint_last.pt'
+    if (os.path.exists(save_path)):
+        os.remove(save_path)
+
+
     # Build model and criterion
     if cfg.distributed_training.ddp_backend == "fully_sharded":
         with fsdp_enable_wrap(cfg.distributed_training):
@@ -227,6 +233,14 @@ def main(cfg: FairseqConfig) -> None:
         )
         PathManager.async_close()
         logger.info("ioPath PathManager finished waiting.")
+
+    num_updates=trainer.get_num_updates()
+    valid_losses = [None]
+    cp_path = checkpoint_utils.save_checkpoint(
+        cfg.checkpoint, trainer, epoch_itr, valid_losses[0],save_last_only=True
+    )
+    if cp_path is not None and hasattr(task, "post_save"):
+        task.post_save(cp_path, num_updates)
 
 
 def should_stop_early(cfg: DictConfig, valid_loss: float) -> bool:
