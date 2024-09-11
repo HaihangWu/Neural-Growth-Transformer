@@ -238,7 +238,7 @@ def main(cfg: FairseqConfig) -> None:
                 'state_dict': model_dict,
             }
             dict_model = utils.move_to_cpu(dict_model)
-            torch.save(dict_model, save_path)
+            #torch.save(dict_model, save_path)
         else:
             neural_growth = False
         Next_epoch=Next_epoch+1
@@ -267,7 +267,7 @@ def main(cfg: FairseqConfig) -> None:
         logger.info("ioPath PathManager finished waiting.")
 
 
-    os.remove(save_path)
+
 
 
 def should_stop_early(cfg: DictConfig, valid_loss: float) -> bool:
