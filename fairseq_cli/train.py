@@ -265,19 +265,16 @@ def main(cfg: FairseqConfig) -> None:
         PathManager.async_close()
         logger.info("ioPath PathManager finished waiting.")
 
-    # model_dict = model.state_dict()
-    # dict_model = {
-    #     'state_dict': model_dict,
-    # }
-    # dict_model = utils.move_to_cpu(dict_model)
-    # torch.save(dict_model, save_path)
+    num_updates=trainer.get_num_updates()
+    valid_losses = [None]
+    cp_path = checkpoint_utils.save_checkpoint(
+        cfg.checkpoint, trainer, epoch_itr, valid_losses[0]
+    )
+    if cp_path is not None and hasattr(task, "post_save"):
+        task.post_save(cp_path, num_updates)
 
-    #valid_subsets = cfg.dataset.valid_subset.split(",")
-    task.load_dataset(cfg.dataset.gen_subset, combine=False, epoch=1)
-    # for valid_sub_split in cfg.dataset.valid_subset.split(","):
-    #     task.load_dataset(valid_sub_split, combine=False, epoch=1)
-    gen_subsets = task.dataset(cfg.dataset.gen_subset)
-    gen_losses = validate(cfg, trainer, task, epoch_itr, gen_subsets)
+    # gen_subsets = task.dataset(cfg.dataset.gen_subset)
+    # gen_losses = validate(cfg, trainer, task, epoch_itr, gen_subsets)
 
 
 
