@@ -273,7 +273,8 @@ def main(cfg: FairseqConfig) -> None:
     # torch.save(dict_model, save_path)
 
     #valid_subsets = cfg.dataset.valid_subset.split(",")
-    gen_subsets = cfg.dataset.gen_subset.split(",")
+    task.load_dataset(cfg.dataset.gen_subset)
+    gen_subsets = task.dataset(cfg.dataset.gen_subset)
     gen_losses = validate(cfg, trainer, task, epoch_itr, gen_subsets)
 
 
