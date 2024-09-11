@@ -39,6 +39,7 @@ from fairseq.file_io import PathManager
 from fairseq.logging import meters, metrics, progress_bar
 from fairseq.model_parallel.megatron_trainer import MegatronTrainer
 from fairseq.trainer import Trainer
+from collections import deque
 
 
 def main(cfg: FairseqConfig) -> None:
@@ -95,6 +96,8 @@ def main(cfg: FairseqConfig) -> None:
     save_path='/data/gpfs/projects/punim0512/Haihangw-Projects/Neural-Growth-Transformer/checkpoints/checkpoint_last.pt'
     if (os.path.exists(save_path)):
         os.remove(save_path)
+    training_accuracy_queue = deque([-1, -1], maxlen=2)
+    grow_thresh=0.01
     train_meter = meters.StopwatchMeter()
     train_meter.start()
     while Next_epoch <= max_epoch: # start training
@@ -228,8 +231,10 @@ def main(cfg: FairseqConfig) -> None:
         if should_stop:
             break
 
-        if max(Next_epoch-4,-1) % 3 == 0 and neural_growth_times<6:
+        training_accuracy_queue.append(train_stats["ppl"])
+        if ((training_accuracy_queue[1] - training_accuracy_queue[0])< grow_thresh) and neural_growth_times<6:
             neural_growth = True
+            training_accuracy_queue = deque([-10, -10], maxlen=2)
             neural_growth_times = (neural_growth_times + 1)
             cfg.lr_scheduler.warmup_updates = 0
             model_dict = model.state_dict()
