@@ -241,7 +241,7 @@ def main(cfg: FairseqConfig) -> None:
         if (Next_epoch==start_epoch_in_next_cycle or  (20-Next_epoch)<(7-neural_growth_times)) and neural_growth_times<6:
             neural_growth = True
             epochs_per_cycle = int(
-                max(max_epochs_per_cycle / (1 + math.exp((4.0 - (np.mean(train_val_gap))))),
+                max(max_epochs_per_cycle / (1 + math.exp(( - (np.mean(train_val_gap))))),
                     1))
             start_epoch_in_next_cycle = start_epoch_in_next_cycle + epochs_per_cycle
             train_val_gap = []
