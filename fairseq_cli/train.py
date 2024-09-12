@@ -236,7 +236,7 @@ def main(cfg: FairseqConfig) -> None:
         train_val_accuracy[0] = float(train_stats["ppl"])
         train_val_accuracy[1] = float(val_stats["ppl"])
         train_val_gap.append(train_val_accuracy[1] - train_val_accuracy[0])
-        max_epochs_per_cycle=(20-Next_epoch) / (6-neural_growth_times)
+        max_epochs_per_cycle=16.0 / 5.0
         print(train_val_accuracy[0], train_val_accuracy[1])
         if (Next_epoch==start_epoch_in_next_cycle or  (20-Next_epoch)<(7-neural_growth_times)) and neural_growth_times<6:
             neural_growth = True
