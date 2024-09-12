@@ -91,12 +91,14 @@ def main(cfg: FairseqConfig) -> None:
 
     neural_growth=True
     neural_growth_times=1
+    start_epoch_in_next_cycle=4
     Next_epoch=1
     max_epoch = cfg.optimization.max_epoch or math.inf
     save_path='/data/gpfs/projects/punim0512/Haihangw-Projects/Neural-Growth-Transformer/checkpoints/checkpoint_last.pt'
     if (os.path.exists(save_path)):
         os.remove(save_path)
-    training_accuracy_queue = deque([-1, -1], maxlen=2)
+    train_val_accuracy=[0,0]
+    train_val_gap=[]
     grow_thresh=0.5
     train_meter = meters.StopwatchMeter()
     train_meter.start()
@@ -231,11 +233,18 @@ def main(cfg: FairseqConfig) -> None:
         if should_stop:
             break
 
-        training_accuracy_queue.append(float(train_stats["ppl"]))
-        print(training_accuracy_queue[1], training_accuracy_queue[0])
-        if Next_epoch>=4 and (((training_accuracy_queue[0] - training_accuracy_queue[1])< grow_thresh) or (20-Next_epoch)<(7-neural_growth_times) ) and neural_growth_times<6:
+        train_val_accuracy[0] = float(train_stats["ppl"])
+        train_val_accuracy[1] = float(val_stats["ppl"])
+        train_val_gap.append(train_val_accuracy[1] - train_val_accuracy[0])
+        max_epochs_per_cycle=(20-Next_epoch) / (6-neural_growth_times)
+        print(train_val_accuracy[0], train_val_accuracy[1])
+        if Next_epoch==start_epoch_in_next_cycle and ( (20-Next_epoch)<(7-neural_growth_times) ) and neural_growth_times<6:
             neural_growth = True
-            training_accuracy_queue = deque([10000, 10000], maxlen=2)
+            epochs_per_cycle = int(
+                max(max_epochs_per_cycle / (1 + math.exp((4.0 - (np.mean(train_val_gap))))),
+                    1))
+            start_epoch_in_next_cycle = start_epoch_in_next_cycle + epochs_per_cycle
+            train_val_gap = []
             neural_growth_times = (neural_growth_times + 1)
             cfg.lr_scheduler.warmup_updates = 0
             model_dict = model.state_dict()
